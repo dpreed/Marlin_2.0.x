@@ -12,9 +12,9 @@
 // For 2209 change TMC2208 by TMC2209 
 //========= Hardware ==========
 /*------Drivers-(1 CHOICE)-----*/
-//#define STOCK                      //(S) 4xA4988 with Robin_mini Board
-#define QQS                        //(S) 4xA4988
-//#define QQS_TMC                    //(8) 4xTMC220x For 2208 or 2209
+//#define STOCK             //(S) 4xA4988 with Robin_mini Board
+#define QQS               //(S) 4xA4988
+//#define QQS_TMC           //(8) 4xTMC220x For 2208 or 2209
 
 /* MODE UART XYZ */
 //#define QQS_UARTx         //(U8) 4xTMC220x (Remove module ESP12)
@@ -41,8 +41,8 @@
 
 /*-------Screen Mks_Robin_TFT_v2---(FSMC)-----*/
 //Choice UI TFT 
-#define FSMC_GRAPHICAL_TFT           //(F) UI STANDARD 
-//#define TFT_320x240             //(C) UI MARLIN (too big with mode UART+UBL=ok with nanolib)
+//#define FSMC_GRAPHICAL_TFT           //(F) UI STANDARD 
+#define TFT_320x240             //(C) UI MARLIN (too big with mode UART+UBL=ok with nanolib)
 //#define TFT_LVGL_UI_FSMC        //(I) UI MKS  => (Bug)
 
 //============= End_Hardware ===============//
