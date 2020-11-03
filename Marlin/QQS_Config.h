@@ -50,7 +50,7 @@
 #define TFT_COLOR_UI               //(C) UI MARLIN (too big with mode UART+UBL=ok with nanolib)
 
 /*----  Modules -----*/
-#define ESP_WIFI                   //(W) Module ESP8266/ESP12
+//#define ESP_WIFI                   //(W) Module ESP8266/ESP12
 
 /*For LedStrip which need an external power source on Vcc pin.*/
 //#define NEOPIXEL_LED               //(N) Use port GPIO Wifi module (PA10/PA9/PA8/PC7)

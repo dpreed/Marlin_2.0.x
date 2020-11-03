@@ -544,9 +544,9 @@
     #define DEFAULT_Kd_LIST {  58.69,  58.69 }
   #else
     // FLSUN QQ-S, 200 C with 100% part cooling
-    #define DEFAULT_Kp  28.16
-    #define DEFAULT_Ki   3.38
-    #define DEFAULT_Kd  58.69
+    #define DEFAULT_Kp  12.241
+    #define DEFAULT_Ki   0.5899
+    #define DEFAULT_Kd   3.5767
 
     // FLSUN QQS-Pro, PET 235 C with 70% part cooling
     //M301 P21.67 I1.25 D93.81        PLA
@@ -604,9 +604,9 @@
   //#define DEFAULT_bedKd 1675.16
 
   // FLSUN QQS-Pro 1.6mm aluminium heater with 4mm lattice glass
-  #define DEFAULT_bedKp 325.10
-  #define DEFAULT_bedKi 63.35
-  #define DEFAULT_bedKd 417.10
+  #define DEFAULT_bedKp 71.81
+  #define DEFAULT_bedKi 9.0648
+  #define DEFAULT_bedKd 236.289
 
   // FIND YOUR OWN: "M303 E-1 S60 C8" to run autotune on the bed at 60 degrees for 8 cycles.
   //M303 E-1 C8 S60 =>Memo M304 P61.05 I11.27 D218.99
@@ -723,12 +723,12 @@
   #define DELTA_DIAGONAL_ROD 280.0        //280 (mm)
 
   // Distance between bed and nozzle Z home position
-  #define DELTA_HEIGHT 360            //370 E3D 360 (mm) Get this value from G33 auto calibrate
+  #define DELTA_HEIGHT 354.3681            //370 E3D 360 (mm) Get this value from G33 auto calibrate
 
-  #define DELTA_ENDSTOP_ADJ { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
+  #define DELTA_ENDSTOP_ADJ { 0.0, -2.66, -3.16 } // Get these values from G33 auto calibrate
 
   // Horizontal distance bridged by diagonal push rods when effector is centered.
-  #define DELTA_RADIUS 141              //140.8 (mm) Get this value from G33 auto calibrate
+  #define DELTA_RADIUS 142.8498              //140.8 (mm) Get this value from G33 auto calibrate
 
   // Trim adjustments for individual towers
   // tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
@@ -883,7 +883,7 @@
 #ifdef BMG
   #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 417 }  //415 default steps per unit
 #else 
-  #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 396.1  }  //397 default steps per unit
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 412.99  }  //412.99 default steps per unit
 #endif
 
 //The next line below calculates the staps value and the 800 value is my E-Steps calculation (400 doubled for 32 steps, if 16 steps then its 400 for me, meaure this with Extrusion test)
