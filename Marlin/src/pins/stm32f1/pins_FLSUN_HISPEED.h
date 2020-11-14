@@ -58,10 +58,10 @@
 // SPI
 // Note: FLSun Hispeed (clone MKS_Robin_miniV2) board is using SPI2 interface.
 //
-#define SPI_DEVICE                            2
+#define SPI_DEVICE                          2
 
 // SPI Flash
-#define HAS_SPI_FLASH                          1
+#define HAS_SPI_FLASH                       1
 #define SPI_FLASH_SIZE                 0x1000000  // 16MB
 
 #if HAS_SPI_FLASH
@@ -75,7 +75,7 @@
 //
 // Servos
 //
-//#define SERVO0_PIN                        PA8   // use IO0 to enable BLTOUCH support/remove Mks_Wifi
+//#define SERVO0_PIN                          PA8   // use IO0 to enable BLTOUCH support/remove Mks_Wifi
 
 //
 // Limit Switches
@@ -118,34 +118,57 @@
 // Drivers
 //
 #if HAS_TMC220x
-  // SoftwareSerial with one pin per driver
-  // Compatible with TMC2208 and TMC2209 drivers
-  #define X_SERIAL_TX_PIN                   PA10  // RXD1
-  #define X_SERIAL_RX_PIN                   PA10  // RXD1
-  #define Y_SERIAL_TX_PIN                   PA9   // TXD1
-  #define Y_SERIAL_RX_PIN                   PA9   // TXD1
-  #define Z_SERIAL_TX_PIN                   PC7   // IO1
-  #define Z_SERIAL_RX_PIN                   PC7   // IO1
   #define TMC_BAUD_RATE                   19200
+  #ifdef HARDWARE_SERIAL /*  TMC2209 */
+    /**
+    * HardwareSerial with one pin for four drivers.
+    * Compatible with TMC2209. Provides best performance.
+    * Requires SLAVE_ADDRESS definitions in Configuration_adv.h and proper
+    * jumper configuration. Uses only one I/O pin like PA10/PA9/PC7/PA8.
+    * Install the jumpers in the following way, for example:
+    */
+    // The 4xTMC2209 module doesn't have a serial multiplexer and
+    // needs to set *_SLAVE_ADDRESS in Configuration_adv.h for X,Y,Z,E0
+    #define  X_SLAVE_ADDRESS 3    // |  |  :
+    #define  Y_SLAVE_ADDRESS 2    // :  |  :
+    #define  Z_SLAVE_ADDRESS 1    // |  :  :
+    //#define E0_SLAVE_ADDRESS 0    // :  :  :
 
-  /**
-   * HardwareSerial with one pin for four drivers.
-   * The 4xTMC2209 module doesn't have a serial multiplexer and
-   * needs to set *_SLAVE_ADDRESS in Configuration_adv.h for X,Y,Z,E0
-   * and proper jumper configuration. 
-   * Uses only one I/O pin like PA10/PA9/PC7/PA8.
-   * Install the jumpers in the following way, for example:
-   */
-   //#define  X_SLAVE_ADDRESS  3   // *  *  .   JP0, JP1
-   //#define  Y_SLAVE_ADDRESS  2   // .  *  .   JP1
-   //#define  Z_SLAVE_ADDRESS  1   // *  .  .   JP0
-   //#define E0_SLAVE_ADDRESS  0   // .  .  .
+    #define X_SERIAL_TX_PIN                  PA8  // IO0
+    #define X_SERIAL_RX_PIN                  PA8  // IO0
+    #define Y_SERIAL_TX_PIN                  PA8  // IO0
+    #define Y_SERIAL_RX_PIN                  PA8  // IO0
+    #define Z_SERIAL_TX_PIN                  PA8  // IO0
+    #define Z_SERIAL_RX_PIN                  PA8  // IO0
+    #ifdef ESP_WIFI
+      //Module ESP-WIFI
+      #define ESP_WIFI_MODULE_COM               2
+      #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE
+      #define ESP_WIFI_MODULE_RESET_PIN         PA5
+      #define ESP_WIFI_MODULE_ENABLE_PIN        -1
+      #define ESP_WIFI_MODULE_TXD_PIN           PA9
+      #define ESP_WIFI_MODULE_RXD_PIN           PA10
+    #endif 
+  #else /*  TMC220x   */
+    // SoftwareSerial with one pin per driver
+    // Compatible with TMC2208 and TMC2209 drivers
+    #define  X_SLAVE_ADDRESS 0
+    #define  Y_SLAVE_ADDRESS 0
+    #define  Z_SLAVE_ADDRESS 0
+    
+    #define X_SERIAL_TX_PIN                   PA10  // RXD1
+    #define X_SERIAL_RX_PIN                   PA10  // RXD1
+    #define Y_SERIAL_TX_PIN                   PA9   // TXD1
+    #define Y_SERIAL_RX_PIN                   PA9   // TXD1
+    #define Z_SERIAL_TX_PIN                   PC7   // IO1
+    #define Z_SERIAL_RX_PIN                   PC7   // IO1
+  #endif
 
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_XY_PIN          PA6   // VREF2/3 CONTROL XY
   #define MOTOR_CURRENT_PWM_Z_PIN           PA7   // VREF4 CONTROL Z
-  #define MOTOR_CURRENT_PWM_RANGE           1500  // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
+  #define MOTOR_CURRENT_PWM_RANGE          1500   // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
   #ifndef DEFAULT_PWM_MOTOR_CURRENT
     #define DEFAULT_PWM_MOTOR_CURRENT { 800, 800, 800 }
   #endif
@@ -165,7 +188,7 @@
  *       ￣￣ AE￣￣
  */
   //Module ESP-WIFI
-  #define ESP_WIFI_MODULE_COM                  2  // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
+  #define ESP_WIFI_MODULE_COM               2     // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
   #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE  // Must use same BAUDRATE as SERIAL_PORT & SERIAL_PORT_2
   #define ESP_WIFI_MODULE_RESET_PIN         PA5   // WIFI CTRL/RST
   #define ESP_WIFI_MODULE_ENABLE_PIN        -1
@@ -179,11 +202,11 @@
 #if AXIS_DRIVER_TYPE_E0(TMC2208) || AXIS_DRIVER_TYPE_E0(TMC2209)
   #define E0_SERIAL_TX_PIN                  PA8   // IO0
   #define E0_SERIAL_RX_PIN                  PA8   // IO0
-  #define TMC_BAUD_RATE                    19200
+  #define TMC_BAUD_RATE                   19200
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_E_PIN           PB0   // VREF1 CONTROL E
-  #define MOTOR_CURRENT_PWM_RANGE           1500  // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
+  #define MOTOR_CURRENT_PWM_RANGE          1500   // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
   #ifndef DEFAULT_PWM_MOTOR_CURRENT
    #define DEFAULT_PWM_MOTOR_CURRENT { 800, 800, 800 }
   #endif
@@ -206,7 +229,7 @@
 //
 // Misc. Functions
 //
-//#define POWER_LOSS_PIN                    PA1   // PW_SO
+//#define POWER_LOSS_PIN                      PA1   // PW_SO
 #if ENABLED(BACKUP_POWER_SUPPLY)
   #define POWER_LOSS_PIN                    PA2   // PW_DET (UPS) MKSPWC
 #endif
@@ -220,6 +243,7 @@
  * RST O|5   6|O  GND
  *      -------
  */
+
 //SW_DIO                                    PA13   //
 //SW_CLK                                    PA14   //
 //SW_RST                                    NRST   //(14)
@@ -230,17 +254,17 @@
 #if ENABLED(PSU_CONTROL)
   #define KILL_PIN                          PA2   // PW_DET
   #define KILL_PIN_INVERTING                true  //
-  //#define PS_ON_PIN                       PA3   // PW_CN /PW_OFF
+  //#define PS_ON_PIN                         PA3   // PW_CN /PW_OFF
 #endif
 
 #define MT_DET_1_PIN                        PA4   // MT_DET
 #define MT_DET_2_PIN                        PE6   // FALA_CRTL
-#define MT_DET_PIN_INVERTING               false
+#define MT_DET_PIN_INVERTING                false
 
 //
 // LED / NEOPixel
 //
-//#define LED_PIN                           PB2   // BOOT1
+//#define LED_PIN                             PB2   // BOOT1
 
 #if ENABLED(NEOPIXEL_LED)
   #define LED_PWM                           PC7  // IO1
