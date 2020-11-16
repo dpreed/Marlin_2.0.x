@@ -58,7 +58,7 @@
 // SPI
 // Note: FLSun Hispeed (clone MKS_Robin_miniV2) board is using SPI2 interface.
 //
-#define SPI_DEVICE                          2
+#define SPI_DEVICE                            2
 
 // SPI Flash
 #define HAS_SPI_FLASH                          1
@@ -118,53 +118,15 @@
 // Drivers
 //
 #if HAS_TMC220x
+  // SoftwareSerial with one pin per driver
+  // Compatible with TMC2208 and TMC2209 drivers
+  #define X_SERIAL_TX_PIN                   PA10  // RXD1
+  #define X_SERIAL_RX_PIN                   PA10  // RXD1
+  #define Y_SERIAL_TX_PIN                   PA9   // TXD1
+  #define Y_SERIAL_RX_PIN                   PA9   // TXD1
+  #define Z_SERIAL_TX_PIN                   PC7   // IO1
+  #define Z_SERIAL_RX_PIN                   PC7   // IO1
   #define TMC_BAUD_RATE                   19200
-<<<<<<< HEAD
-  #ifdef HARDWARE_SERIAL /*  TMC2209 */
-    /**
-    * HardwareSerial with one pin for four drivers.
-    * Compatible with TMC2209. Provides best performance.
-    * Requires SLAVE_ADDRESS definitions in Configuration_adv.h and proper
-    * jumper configuration. Uses only one I/O pin like PA10/PA9/PC7/PA8.
-    * Install the jumpers in the following way, for example:
-    */
-    // The 4xTMC2209 module doesn't have a serial multiplexer and
-    // needs to set *_SLAVE_ADDRESS in Configuration_adv.h for X,Y,Z,E0
-    #define  X_SLAVE_ADDRESS 3    // |  |  :
-    #define  Y_SLAVE_ADDRESS 2    // :  |  :
-    #define  Z_SLAVE_ADDRESS 1    // |  :  :
-    //#define E0_SLAVE_ADDRESS 0    // :  :  :
-
-    #define X_SERIAL_TX_PIN                  PA8  // IO0
-    #define X_SERIAL_RX_PIN                  PA8  // IO0
-    #define Y_SERIAL_TX_PIN                  PA8  // IO0
-    #define Y_SERIAL_RX_PIN                  PA8  // IO0
-    #define Z_SERIAL_TX_PIN                  PA8  // IO0
-    #define Z_SERIAL_RX_PIN                  PA8  // IO0
-    #ifdef ESP_WIFI
-      //Module ESP-WIFI
-      #define ESP_WIFI_MODULE_COM               2
-      #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE
-      #define ESP_WIFI_MODULE_RESET_PIN         PA5
-      #define ESP_WIFI_MODULE_ENABLE_PIN        -1
-      #define ESP_WIFI_MODULE_TXD_PIN           PA9
-      #define ESP_WIFI_MODULE_RXD_PIN           PA10
-    #endif 
-  #else /*  TMC220x   */
-    // SoftwareSerial with one pin per driver
-    // Compatible with TMC2208 and TMC2209 drivers
-    #define  X_SLAVE_ADDRESS 0
-    #define  Y_SLAVE_ADDRESS 0
-    #define  Z_SLAVE_ADDRESS 0
-    
-    #define X_SERIAL_TX_PIN                   PA10  // RXD1
-    #define X_SERIAL_RX_PIN                   PA10  // RXD1
-    #define Y_SERIAL_TX_PIN                   PA9   // TXD1
-    #define Y_SERIAL_RX_PIN                   PA9   // TXD1
-    #define Z_SERIAL_TX_PIN                   PC7   // IO1
-    #define Z_SERIAL_RX_PIN                   PC7   // IO1
-  #endif
-=======
 
   /**
    * HardwareSerial with one pin for four drivers.
@@ -178,7 +140,6 @@
    //#define  Y_SLAVE_ADDRESS  2   // .  *  .   JP1
    //#define  Z_SLAVE_ADDRESS  1   // *  .  .   JP0
    //#define E0_SLAVE_ADDRESS  0   // .  .  .
->>>>>>> d70922febb (Simplication and add J2 connector)
 
 #else
   // Motor current PWM pins
@@ -204,7 +165,7 @@
  *       ￣￣ AE￣￣
  */
   //Module ESP-WIFI
-  #define ESP_WIFI_MODULE_COM               2     // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
+  #define ESP_WIFI_MODULE_COM                  2  // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
   #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE  // Must use same BAUDRATE as SERIAL_PORT & SERIAL_PORT_2
   #define ESP_WIFI_MODULE_RESET_PIN         PA5   // WIFI CTRL/RST
   #define ESP_WIFI_MODULE_ENABLE_PIN        -1
@@ -259,7 +220,6 @@
  * RST O|5   6|O  GND
  *      -------
  */
-
 //SW_DIO                                    PA13   //
 //SW_CLK                                    PA14   //
 //SW_RST                                    NRST   //(14)
@@ -270,7 +230,7 @@
 #if ENABLED(PSU_CONTROL)
   #define KILL_PIN                          PA2   // PW_DET
   #define KILL_PIN_INVERTING                true  //
-  //#define PS_ON_PIN                         PA3   // PW_CN /PW_OFF
+  //#define PS_ON_PIN                       PA3   // PW_CN /PW_OFF
 #endif
 
 #define MT_DET_1_PIN                        PA4   // MT_DET
@@ -292,23 +252,24 @@
 //
 // SD Card
 //
-#define SDIO_CLOCK                       4500000  // 4.5 MHz
-#define SDIO_READ_RETRIES                     16
+#ifndef SDCARD_CONNECTION
+  #define SDCARD_CONNECTION              ONBOARD
+#endif
 
-#if ENABLED(SDIO_SUPPORT)
-  #define SCK_PIN                           PB13  // SPI2
-  #define MISO_PIN                          PB14  // SPI2
-  #define MOSI_PIN                          PB15  // SPI2
-  #define SD_DETECT_PIN                     -1    // SD_CD (-1 active refresh)
-  #define SS_PIN                            PC2
-#else // Use the on-board card socket labeled SD_Extender
+// Use the on-board card socket labeled SD_Extender
+#if SD_CONNECTION_IS(CUSTOM_CABLE) 
   #define SCK_PIN                           PC12
   #define MISO_PIN                          PC8
   #define MOSI_PIN                          PD2
   #define SS_PIN                            -1
-  #define ONBOARD_SD_CS_PIN                 PC11
-  #define SDSS                              PD2
   #define SD_DETECT_PIN                     PD12  // SD_CD (if -1 no detection)
+#else
+  #define SDIO_SUPPORT
+  #define SDIO_CLOCK                     4500000  // 4.5 MHz
+  #define SDIO_READ_RETRIES                   16
+  #define ONBOARD_SPI_DEVICE                   1  // SPI1
+  #define ONBOARD_SD_CS_PIN                 PC11
+  #define SD_DETECT_PIN                     -1    // SD_CD (-1 active refresh)
 #endif
 
 //
