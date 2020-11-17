@@ -50,18 +50,19 @@
 //
 #if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #define FLASH_EEPROM_EMULATION
-  #define EEPROM_PAGE_SIZE     (0x800U)          // 2KB
+  #define EEPROM_PAGE_SIZE     (0x800U)           // 2KB
   #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
   #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2KB
 #endif
 
+//
 // SPI
 // Note: FLSun Hispeed (clone MKS_Robin_miniV2) board is using SPI2 interface.
 //
-#define SPI_DEVICE                            2
+#define SPI_DEVICE 2
 
 // SPI Flash
-#define HAS_SPI_FLASH                          1
+#define HAS_SPI_FLASH                       1
 #define SPI_FLASH_SIZE                 0x1000000  // 16MB
 
 #if HAS_SPI_FLASH
@@ -75,7 +76,7 @@
 //
 // Servos
 //
-//#define SERVO0_PIN                        PA8   // use IO0 to enable BLTOUCH support/remove Mks_Wifi
+//#define SERVO0_PIN                          PA8   // use IO0 to enable BLTOUCH support/remove Mks_Wifi
 
 //
 // Limit Switches
@@ -118,20 +119,57 @@
 // Drivers
 //
 #if HAS_TMC220x
-  // SoftwareSerial with one pin per driver
-  // Compatible with TMC2208 and TMC2209 drivers
-  #define X_SERIAL_TX_PIN                   PA10  // RXD1
-  #define X_SERIAL_RX_PIN                   PA10  // RXD1
-  #define Y_SERIAL_TX_PIN                   PA9   // TXD1
-  #define Y_SERIAL_RX_PIN                   PA9   // TXD1
-  #define Z_SERIAL_TX_PIN                   PC7   // IO1
-  #define Z_SERIAL_RX_PIN                   PC7   // IO1
   #define TMC_BAUD_RATE                   19200
+  #ifdef HARDWARE_SERIAL /*  TMC2209 */
+    /**
+    * HardwareSerial with one pin for four drivers.
+    * Compatible with TMC2209. Provides best performance.
+    * Requires SLAVE_ADDRESS definitions in Configuration_adv.h and proper
+    * jumper configuration. Uses only one I/O pin like PA10/PA9/PC7/PA8.
+    * Install the jumpers in the following way, for example:
+    */
+    // The 4xTMC2209 module doesn't have a serial multiplexer and
+    // needs to set *_SLAVE_ADDRESS in Configuration_adv.h for X,Y,Z,E0
+    #define  X_SLAVE_ADDRESS 3    // |  |  :
+    #define  Y_SLAVE_ADDRESS 2    // :  |  :
+    #define  Z_SLAVE_ADDRESS 1    // |  :  :
+    //#define E0_SLAVE_ADDRESS 0    // :  :  :
+
+    #define X_SERIAL_TX_PIN                  PA8  // IO0
+    #define X_SERIAL_RX_PIN                  PA8  // IO0
+    #define Y_SERIAL_TX_PIN                  PA8  // IO0
+    #define Y_SERIAL_RX_PIN                  PA8  // IO0
+    #define Z_SERIAL_TX_PIN                  PA8  // IO0
+    #define Z_SERIAL_RX_PIN                  PA8  // IO0
+    #ifdef ESP_WIFI
+      //Module ESP-WIFI
+      #define ESP_WIFI_MODULE_COM               2
+      #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE
+      #define ESP_WIFI_MODULE_RESET_PIN         PA5
+      #define ESP_WIFI_MODULE_ENABLE_PIN        -1
+      #define ESP_WIFI_MODULE_TXD_PIN           PA9
+      #define ESP_WIFI_MODULE_RXD_PIN           PA10
+    #endif 
+  #else /*  TMC220x   */
+    // SoftwareSerial with one pin per driver
+    // Compatible with TMC2208 and TMC2209 drivers
+    #define  X_SLAVE_ADDRESS 0
+    #define  Y_SLAVE_ADDRESS 0
+    #define  Z_SLAVE_ADDRESS 0
+    
+    #define X_SERIAL_TX_PIN                   PA10  // RXD1
+    #define X_SERIAL_RX_PIN                   PA10  // RXD1
+    #define Y_SERIAL_TX_PIN                   PA9   // TXD1
+    #define Y_SERIAL_RX_PIN                   PA9   // TXD1
+    #define Z_SERIAL_TX_PIN                   PC7   // IO1
+    #define Z_SERIAL_RX_PIN                   PC7   // IO1
+  #endif
+
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_XY_PIN          PA6   // VREF2/3 CONTROL XY
   #define MOTOR_CURRENT_PWM_Z_PIN           PA7   // VREF4 CONTROL Z
-  #define MOTOR_CURRENT_PWM_RANGE           1500  // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
+  #define MOTOR_CURRENT_PWM_RANGE          1500   // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
   #ifndef DEFAULT_PWM_MOTOR_CURRENT
     #define DEFAULT_PWM_MOTOR_CURRENT { 800, 800, 800 }
   #endif
@@ -165,11 +203,11 @@
 #if AXIS_DRIVER_TYPE_E0(TMC2208) || AXIS_DRIVER_TYPE_E0(TMC2209)
   #define E0_SERIAL_TX_PIN                  PA8   // IO0
   #define E0_SERIAL_RX_PIN                  PA8   // IO0
-  #define TMC_BAUD_RATE                    19200
+  #define TMC_BAUD_RATE                   19200
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_E_PIN           PB0   // VREF1 CONTROL E
-  #define MOTOR_CURRENT_PWM_RANGE           1500  // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
+  #define MOTOR_CURRENT_PWM_RANGE          1500   // (255 * (1000mA / 65535)) * 257 = 1000 is equal 1.6v Vref in turn equal 1Amp
   #ifndef DEFAULT_PWM_MOTOR_CURRENT
    #define DEFAULT_PWM_MOTOR_CURRENT { 800, 800, 800 }
   #endif
@@ -192,44 +230,43 @@
 //
 // Misc. Functions
 //
-//#define POWER_LOSS_PIN                    PA1   // PW_SO
+//#define POWER_LOSS_PIN                      PA1   // PW_SO
 #if ENABLED(BACKUP_POWER_SUPPLY)
   #define POWER_LOSS_PIN                    PA2   // PW_DET (UPS) MKSPWC
 #endif
 
-//
-// 
-/**   Connector J2
+/**
+ *    Connector J2
  *      -------
  * DIO O|1   2|O  3v3
  * CSK O|3   5|O  GND
  * RST O|5   6|O  GND
  *      -------
  */
-//SW_DIO                                    PA13   //
-//SW_CLK                                    PA14   //
-//SW_RST                                    NRST   //(14)
+//#define SW_DIO                            PA13
+//#define SW_CLK                            PA14
+//#define SW_RST                            NRST   // (14)
 
 //
 // Power Supply Control
 //
 #if ENABLED(PSU_CONTROL)
   #define KILL_PIN                          PA2   // PW_DET
-  #define KILL_PIN_INVERTING                true  //
+  #define KILL_PIN_INVERTING                true
   //#define PS_ON_PIN                       PA3   // PW_CN /PW_OFF
 #endif
 
 #define MT_DET_1_PIN                        PA4   // MT_DET
 #define MT_DET_2_PIN                        PE6   // FALA_CRTL
-#define MT_DET_PIN_INVERTING               false
+#define MT_DET_PIN_INVERTING                false
 
 //
 // LED / NEOPixel
 //
-//#define LED_PIN                           PB2   // BOOT1
+//#define LED_PIN                             PB2   // BOOT1
 
 #if ENABLED(NEOPIXEL_LED)
-  #define LED_PWM                           PC7  // IO1
+  #define LED_PWM                           PC7   // IO1
   #ifndef NEOPIXEL_PIN
     #define NEOPIXEL_PIN                 LED_PWM  // USED WIFI IO0/IO1 PIN
   #endif
@@ -299,29 +336,10 @@
   #define FSMC_DMA_DEV                      DMA2
   #define FSMC_DMA_CHANNEL               DMA_CH5
 
-  #define TOUCH_BUTTONS_HW_SPI
-  #define TOUCH_BUTTONS_HW_SPI_DEVICE          2
-#endif
-
-// XPT2046 Touch Screen calibration
-#if ANY(TFT_COLOR_UI, TFT_LVGL_UI, TFT_CLASSIC_UI)
   #define TFT_BUFFER_SIZE                  14400
-
-  #ifndef XPT2046_X_CALIBRATION
-    #define XPT2046_X_CALIBRATION          12033
-  #endif
-  #ifndef XPT2046_Y_CALIBRATION
-    #define XPT2046_Y_CALIBRATION          -9047
-  #endif
-  #ifndef XPT2046_X_OFFSET
-    #define XPT2046_X_OFFSET                 -30
-  #endif
-  #ifndef XPT2046_Y_OFFSET
-    #define XPT2046_Y_OFFSET                 254
-  #endif
-
   #ifdef TFT_CLASSIC_UI
-    #define TFT_MARLINUI_COLOR            0xFFFF  // White
+    #define TFT_MARLINBG_COLOR            0x3186  // White
+    #define TFT_MARLINUI_COLOR            0xC7B6  // Green
     #define TFT_BTARROWS_COLOR            0xDEE6  // Yellow
     #define TFT_BTOKMENU_COLOR            0x145F  // Cyan
   #endif
