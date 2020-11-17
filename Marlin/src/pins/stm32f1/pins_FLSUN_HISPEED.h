@@ -58,7 +58,7 @@
 // SPI
 // Note: FLSun Hispeed (clone MKS_Robin_miniV2) board is using SPI2 interface.
 //
-#define SPI_DEVICE                             2
+#define SPI_DEVICE                            2
 
 // SPI Flash
 #define HAS_SPI_FLASH                          1
@@ -108,49 +108,26 @@
 #define E0_STEP_PIN                         PD6   // E0_STEP
 #define E0_DIR_PIN                          PD3   // E0_DIR
 
+/**
+ * FLSUN Hi-Speed has no hard-wired UART pins for TMC drivers.
+ * Several wiring options are provided below, defaulting to
+ * to the most compatible.
+ */
+
 //
 // Drivers
 //
 #if HAS_TMC220x
-
-  #if ENABLED(HARDWARE_SERIAL)  /*  TMC2209 */
-    #define X_SLAVE_ADDRESS                    3  // |  |  :
-    #define Y_SLAVE_ADDRESS                    2  // :  |  :
-    #define Z_SLAVE_ADDRESS                    1  // |  :  :
-    //#define E0_SLAVE_ADDRESS                 0  // :  :  :
-
-    #define X_SERIAL_TX_PIN                 PA9   // TXD1
-    #define X_SERIAL_RX_PIN                 PA9   // TXD1
-
-    #define Y_SERIAL_TX_PIN                 PA9   // TXD1
-    #define Y_SERIAL_RX_PIN                 PA9   // TXD1
-
-    #define Z_SERIAL_TX_PIN                 PA9   // TXD1
-    #define Z_SERIAL_RX_PIN                 PA9   // TXD1
-
-  #elif ENABLED(SOFTWARE_SERIAL)  /*  TMC220x   */
-    /**
-     * TMC2208 stepper UART-configurable by PDN_UART pin
-     * Software serial
-     */
-    #define X_SLAVE_ADDRESS                    0
-    #define Y_SLAVE_ADDRESS                    0
-    #define Z_SLAVE_ADDRESS                    0
-
-    #define X_SERIAL_TX_PIN                 PA10  // RXD1
-    #define X_SERIAL_RX_PIN                 PA10  // RXD1
-
-    #define Y_SERIAL_TX_PIN                 PA9   // TXD1
-    #define Y_SERIAL_RX_PIN                 PA9   // TXD1
-
-    #define Z_SERIAL_TX_PIN                 PC7   // IO1
-    #define Z_SERIAL_RX_PIN                 PC7   // IO1
-
-  #endif
-  // Reduce baud rate to improve software serial reliability
-  #define TMC_BAUD_RATE                    19200
+  // SoftwareSerial with one pin per driver
+  // Compatible with TMC2208 and TMC2209 drivers
+  #define X_SERIAL_TX_PIN                   PA10  // RXD1
+  #define X_SERIAL_RX_PIN                   PA10  // RXD1
+  #define Y_SERIAL_TX_PIN                   PA9   // TXD1
+  #define Y_SERIAL_RX_PIN                   PA9   // TXD1
+  #define Z_SERIAL_TX_PIN                   PC7   // IO1
+  #define Z_SERIAL_RX_PIN                   PC7   // IO1
+  #define TMC_BAUD_RATE                   19200
 #else
-
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_XY_PIN          PA6   // VREF2/3 CONTROL XY
   #define MOTOR_CURRENT_PWM_Z_PIN           PA7   // VREF4 CONTROL Z
@@ -159,33 +136,33 @@
     #define DEFAULT_PWM_MOTOR_CURRENT { 800, 800, 800 }
   #endif
 
-  /**
-   * src: MKS Robin_Mini V2
-   *           __ESP(M1)__           -J1-
-   *       GND| 15 | | 08 |+3v3      (22)=>RXD1(PA10)  //
-   *          | 16 | | 07 |MOSI      (21)=>TXD1(PA9)   // active low, probably OK to leave floating
-   *       IO2| 17 | | 06 |MISO      (19)=>IO1(PC7)    // Leave as unused (ESP3D software configures this with a pullup so OK to leave as floating)
-   *       IO0| 18 | | 05 |CLK       (18)=>IO0(PA8)    // must be high (ESP3D software configures this with a pullup so OK to leave as floating)
-   *       IO1| 19 | | 03 |EN        (03)=>WIFI_EN()   // Must be high for module to run
-   *          | nc | | nc |          (01)=>WIFI_CTRL(PA5)
-   *        RX| 21 | | nc |
-   *        TX| 22 | | 01 |RST
-   *            ￣￣ AE￣￣
-   *
-   */
-  #ifdef ESP_WIFI
-    #define WIFI_IO0_PIN                    PA8   // PC13 MKS ESP WIFI IO0 PIN
-    #define WIFI_IO1_PIN                    PC7   // MKS ESP WIFI IO1 PIN
-    #define WIFI_RESET_PIN                  PA5   // MKS ESP WIFI RESET PIN
-  #endif
+/**
+ * MKS Robin_Wifi or another ESP8266 module
+ *
+ *      __ESP(M1)__       -J1-
+ *  GND| 15 | | 08 |+3v3  (22)  RXD1      (PA10)
+ *     | 16 | | 07 |MOSI  (21)  TXD1      (PA9)   Active LOW, probably OK to leave floating
+ *  IO2| 17 | | 06 |MISO  (19)  IO1       (PC7)   Leave as unused (ESP3D software configures this with a pullup so OK to leave as floating)
+ *  IO0| 18 | | 05 |CLK   (18)  IO0       (PA8)   Must be HIGH (ESP3D software configures this with a pullup so OK to leave as floating)
+ *  IO1| 19 | | 03 |EN    (03)  WIFI_EN           Must be HIGH for module to run
+ *     | nc | | nc |      (01)  WIFI_CTRL (PA5)
+ *   RX| 21 | | nc |
+ *   TX| 22 | | 01 |RST
+ *       ￣￣ AE￣￣
+ */
+  // Module ESP-WIFI
+  #define ESP_WIFI_MODULE_COM                  2  // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
+  #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE  // Must use same BAUDRATE as SERIAL_PORT & SERIAL_PORT_2
+  #define ESP_WIFI_MODULE_RESET_PIN         PA5   // WIFI CTRL/RST
+  #define ESP_WIFI_MODULE_ENABLE_PIN        -1
+  #define ESP_WIFI_MODULE_TXD_PIN           PA9   // MKS or ESP WIFI RX PIN
+  #define ESP_WIFI_MODULE_RXD_PIN           PA10  // MKS or ESP WIFI TX PIN
 #endif
 
 //
 // EXTRUDER
 //
-#if AXIS_DRIVER_TYPE(E0,TMC2208)||AXIS_DRIVER_TYPE(E0,TMC2209)
-  #define E0_SLAVE_ADDRESS                     0
-
+#if AXIS_DRIVER_TYPE_E0(TMC2208) || AXIS_DRIVER_TYPE_E0(TMC2209)
   #define E0_SERIAL_TX_PIN                  PA8   // IO0
   #define E0_SERIAL_RX_PIN                  PA8   // IO0
   #define TMC_BAUD_RATE                    19200
@@ -199,7 +176,7 @@
 #endif
 
 //
-// Temperature Sensors(THM)
+// Temperature Sensors (THM)
 //
 #define TEMP_0_PIN                          PC1   // TEMP_E0
 #define TEMP_BED_PIN                        PC0   // TEMP_BED
@@ -211,7 +188,6 @@
 #define HEATER_BED_PIN                      PA0   // HEATER_BED-WKUP
 
 #define FAN_PIN                             PB1   // E_FAN
-//#define CONTROLLER_FAN_PIN                PD6   // BOARD FAN
 
 //
 // Misc. Functions
@@ -220,6 +196,19 @@
 #if ENABLED(BACKUP_POWER_SUPPLY)
   #define POWER_LOSS_PIN                    PA2   // PW_DET (UPS) MKSPWC
 #endif
+
+//
+// 
+/**   Connector J2
+ *      -------
+ * DIO O|1   2|O  3v3
+ * CSK O|3   5|O  GND
+ * RST O|5   6|O  GND
+ *      -------
+ */
+//SW_DIO                                    PA13   //
+//SW_CLK                                    PA14   //
+//SW_RST                                    NRST   //(14)
 
 //
 // Power Supply Control
@@ -240,28 +229,33 @@
 //#define LED_PIN                           PB2   // BOOT1
 
 #if ENABLED(NEOPIXEL_LED)
-  #define LED_PWM                           PA8
+  #define LED_PWM                           PC7  // IO1
   #ifndef NEOPIXEL_PIN
-    #define NEOPIXEL_PIN                 LED_PWM  // USED WIFI IO0/IO1/TX/RX PIN
+    #define NEOPIXEL_PIN                 LED_PWM  // USED WIFI IO0/IO1 PIN
   #endif
 #endif
-
-//Others test.
-//#define SERVO0_PIN                        PA5   // WIFI CRTL
-//#define GPIO_CLEAR                        PA8   // IO0
-//#define GPIO_SET                          PA5
 
 //
 // SD Card
 //
-#define SDIO_SUPPORT
-#define SDIO_CLOCK                       4500000  // 4.5 MHz /* 18 MHz (18000000) or 4.5MHz (450000) */
-//#define SDIO_CLOCK                    18000000  // 18 MHz (18000000)
-#if ENABLED(SDIO_SUPPORT)
-  #define SCK_PIN                           PB13  // SPI2
-  #define MISO_PIN                          PB14  // SPI2
-  #define MOSI_PIN                          PB15  // SPI2
-  #define SD_DETECT_PIN                     PD12  // SD_CD
+#ifndef SDCARD_CONNECTION
+  #define SDCARD_CONNECTION              ONBOARD
+#endif
+
+// Use the on-board card socket labeled SD_Extender
+#if SD_CONNECTION_IS(CUSTOM_CABLE) 
+  #define SCK_PIN                           PC12
+  #define MISO_PIN                          PC8
+  #define MOSI_PIN                          PD2
+  #define SS_PIN                            -1
+  #define SD_DETECT_PIN                     PD12  // SD_CD (if -1 no detection)
+#else
+  #define SDIO_SUPPORT
+  #define SDIO_CLOCK                     4500000  // 4.5 MHz
+  #define SDIO_READ_RETRIES                   16
+  #define ONBOARD_SPI_DEVICE                   1  // SPI1
+  #define ONBOARD_SD_CS_PIN                 PC11
+  #define SD_DETECT_PIN                     -1    // SD_CD (-1 active refresh)
 #endif
 
 //
@@ -269,6 +263,10 @@
 //
 #ifndef BEEPER_PIN
   #define BEEPER_PIN                        PC5
+#endif
+
+#if ENABLED(SPEAKER) && BEEPER_PIN == PC5
+  #error "FLSun HiSpeed default BEEPER_PIN is not a SPEAKER."
 #endif
 
 /**
@@ -284,26 +282,7 @@
  * because Marlin uses the reset as a failsafe to revive a glitchy LCD.
  */
 
-// MKS Robin TFT v2.0 with ILI9341
-// Read display identification information (0xD3 on ILI9341)
-//#define TOUCH_CALIBRATION_X              12013
-//#define TOUCH_CALIBRATION_Y              -8711
-//#define TOUCH_OFFSET_X                     -32
-//#define TOUCH_OFFSET_Y                     256
-
-// MKS Robin TFT v1.1 with ILI9328
-//#define TOUCH_CALIBRATION_X             -11792
-//#define TOUCH_CALIBRATION_Y               8947
-//#define TOUCH_OFFSET_X                     342
-//#define TOUCH_OFFSET_Y                     -19
-
-// MKS Robin TFT v1.1 with R61505
-//#define TOUCH_CALIBRATION_X              12489
-//#define TOUCH_CALIBRATION_Y               9210
-//#define TOUCH_OFFSET_X                     -52
-//#define TOUCH_OFFSET_Y                     -17
-
-// QQS-Pro uses MKS Robin TFT v2.0
+// QQS-Pro uses MKS Robin TFT v2.0 320x240
 
 // Shared FSMC Configs
 #if HAS_FSMC_TFT
@@ -322,6 +301,30 @@
 
   #define TOUCH_BUTTONS_HW_SPI
   #define TOUCH_BUTTONS_HW_SPI_DEVICE          2
+#endif
+
+// XPT2046 Touch Screen calibration
+#if ANY(TFT_COLOR_UI, TFT_LVGL_UI, TFT_CLASSIC_UI)
+  #define TFT_BUFFER_SIZE                  14400
+
+  #ifndef XPT2046_X_CALIBRATION
+    #define XPT2046_X_CALIBRATION          12033
+  #endif
+  #ifndef XPT2046_Y_CALIBRATION
+    #define XPT2046_Y_CALIBRATION          -9047
+  #endif
+  #ifndef XPT2046_X_OFFSET
+    #define XPT2046_X_OFFSET                 -30
+  #endif
+  #ifndef XPT2046_Y_OFFSET
+    #define XPT2046_Y_OFFSET                 254
+  #endif
+
+  #ifdef TFT_CLASSIC_UI
+    #define TFT_MARLINUI_COLOR            0xFFFF  // White
+    #define TFT_BTARROWS_COLOR            0xDEE6  // Yellow
+    #define TFT_BTOKMENU_COLOR            0x145F  // Cyan
+  #endif
 #endif
 
 #if NEED_TOUCH_PINS
