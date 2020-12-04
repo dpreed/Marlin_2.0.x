@@ -91,7 +91,9 @@
 //#define SHOW_CUSTOM_BOOTSCREEN
 
 // Show the bitmap in Marlin/_Statusscreen.h on the status screen.
-//#define CUSTOM_STATUS_SCREEN_IMAGE
+#ifdef TFT_CLASSIC_UI
+  #define CUSTOM_STATUS_SCREEN_IMAGE  //TIPS
+#endif
 
 // @section machine
 
@@ -103,7 +105,8 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT 0
+#if ANY(QQS, QQS_TMC, QQS_UART)
+  #define SERIAL_PORT 3
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
@@ -128,11 +131,30 @@
 
 // Choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_RAMPS_14_EFB
+  #ifdef STOCK
+    #define MOTHERBOARD BOARD_FLSUN_HISPEED
+  #endif  
+  #ifdef SKR14
+    #define MOTHERBOARD BOARD_BTT_SKR_V1_4
+  #endif
+  #ifdef SKR14T
+    #define MOTHERBOARD BOARD_BTT_SKR_V1_4_TURBO
+  #endif
+  #ifdef SKR12PRO
+    #define MOTHERBOARD BOARD_BTT_SKR_PRO_V1_2
+  #endif
 #endif
 
 // Name displayed in the LCD "Ready" message and Info menu
-//#define CUSTOM_MACHINE_NAME "3D Printer"
+#ifdef QQS
+  #define CUSTOM_MACHINE_NAME "FLSUN QQS-Pro"
+#endif
+#ifdef QQS_TMC
+  #define CUSTOM_MACHINE_NAME "FLSUN QQS TMC"
+#endif
+#ifdef QQS_UART
+  #define CUSTOM_MACHINE_NAME "FLSUN QQS UART"
+#endif
 
 // Printer's unique ID, used by some programs to differentiate between machines.
 // Choose your own or use a service like https://www.uuidgenerator.net/version4
@@ -533,9 +555,20 @@
 
   // 120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
   // from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
-  #define DEFAULT_bedKp 10.00
-  #define DEFAULT_bedKi .023
-  #define DEFAULT_bedKd 305.4
+  //#define DEFAULT_bedKp 10.00
+  //#define DEFAULT_bedKi .023
+  //#define DEFAULT_bedKd 305.4
+
+  // FLSUN QQS-Pro 1.6mm aluminium heater with 4mm lattice glass
+  #define DEFAULT_bedKp 82.98
+  #define DEFAULT_bedKi 15.93
+  #define DEFAULT_bedKd 288.25
+
+  // FIND YOUR OWN: "M303 E-1 S60 C8 U" to run autotune on the bed at 60 degrees for 8 cycles.
+  //M303 E-1 C8 S60 =>Memo M304 P61.05 I11.27 D218.99
+  //#define DEFAULT_bedKp 61.05
+  //#define DEFAULT_bedKi 11.72
+  //#define DEFAULT_bedKd 211.99
 
   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
 #endif // PIDTEMPBED
@@ -603,6 +636,81 @@
 //#define COREZX
 //#define COREZY
 //#define MARKFORGED_XY  // MarkForged. See https://reprap.org/forum/read.php?152,504042
+
+//===========================================================================
+//============================== Delta Settings =============================
+//===========================================================================
+// Enable DELTA kinematics and most of the default configuration for Deltas
+#define DELTA
+
+#if ENABLED(DELTA)
+
+  // Make delta curves from many straight lines (linear interpolation).
+  // This is a trade-off between visible corners (not enough segments)
+  // and processor overload (too many expensive sqrt calls).
+  #define DELTA_SEGMENTS_PER_SECOND 80  //200
+
+  // After homing move down to a height where XY movement is unconstrained
+  //#define DELTA_HOME_TO_SAFE_ZONE
+
+  // Delta calibration menu
+  // uncomment to add three points calibration menu option.
+  // See http://minow.blogspot.com/index.html#4918805519571907051
+  //#define DELTA_CALIBRATION_MENU  //Define on QQS_Config
+
+  // uncomment to add G33 Delta Auto-Calibration (Enable EEPROM_SETTINGS to store results)
+  #define DELTA_AUTO_CALIBRATION
+
+  // NOTE NB all values for DELTA_* values MUST be floating point, so always have a decimal point in them
+
+  #if ENABLED(DELTA_AUTO_CALIBRATION)
+    // set the default number of probe points : n*n (1 -> 7)
+    #define DELTA_CALIBRATION_DEFAULT_POINTS  4
+  #endif
+
+  #if EITHER(DELTA_AUTO_CALIBRATION, DELTA_CALIBRATION_MENU)
+    // Set the steprate for papertest probing
+    #define PROBE_MANUALLY_STEP 0.05      // (mm)
+  #endif
+  #if ENABLED(FLYING)
+    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+    #define DELTA_PRINTABLE_RADIUS 130.0  // (mm)
+    // Center-to-center distance of the holes in the diagonal push rods.
+    #define DELTA_DIAGONAL_ROD 280.77
+    // Horizontal offset from middle of printer to smooth rod center.
+    #define DELTA_SMOOTH_ROD_OFFSET 200.0   //180.8 (mm) PRINTER_RADIUS(Repetier).
+    // Horizontal offset of the universal joints on the end effector.
+    #define DELTA_EFFECTOR_OFFSET 40.0      //40 END_EFFECTOR_HORIZONTAL_OFFSET(Repetier).
+    // Horizontal offset of the universal joints on the carriages.
+    #define DELTA_CARRIAGE_OFFSET 17.0    //15.5 (mm) CARRIAGE_HORIZONTAL_OFFSET(Repetier).
+    // Horizontal distance bridged by diagonal push rods when effector is centered.
+    #define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))
+  #else
+    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+    #define DELTA_PRINTABLE_RADIUS 130.0    //130 (mm)
+
+    // Center-to-center distance of the holes in the diagonal push rods.
+    #define DELTA_DIAGONAL_ROD 280.0        //280 (mm)
+
+    // Horizontal distance bridged by diagonal push rods when effector is centered.
+    #define DELTA_RADIUS 140.8               //140.8 (mm) Get this value from G33 auto calibrate
+  #endif
+
+  // Distance between bed and nozzle Z home position
+  #define DELTA_HEIGHT 370.0                 //370 E3D-360 (mm) Get this value from G33 auto calibrate
+
+  #define DELTA_ENDSTOP_ADJ { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
+
+  // Trim adjustments for individual towers
+  // tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
+  // measured in degrees anticlockwise looking from above the printer
+  #define DELTA_TOWER_ANGLE_TRIM { 0.0, 0.0, 0.0 } // Get these values from G33 auto calibrate
+
+  // Delta radius and diagonal rod adjustments (mm)
+  #define DELTA_RADIUS_TRIM_TOWER { 0.0, 0.0, 0.0 } //OPT
+  #define DELTA_DIAGONAL_ROD_TRIM_TOWER { 0.0, 0.0, 0.0 } //OCTO
+
+#endif
 
 //===========================================================================
 //============================== Endstop Settings ===========================
@@ -736,7 +844,26 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 500 }
+// variables to calculate steps
+#define XYZ_FULL_STEPS_PER_ROTATION 200
+#define XYZ_MICROSTEPS 16
+#define XYZ_BELT_PITCH 2
+#define XYZ_PULLEY_TEETH 16
+
+// delta speeds must be the same on xyz
+#define DEFAULT_XYZ_STEPS_PER_UNIT ((XYZ_FULL_STEPS_PER_ROTATION) * (XYZ_MICROSTEPS) / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH))
+#ifdef BMG
+  #ifdef Mini
+    #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 141 }  //141 default steps per unit
+  #else
+    #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 415 }  //415 default steps per unit
+  #endif
+#else
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 397  }  //397 default steps per unit
+#endif
+
+//The next line below calculates the staps value and the 800 value is my E-Steps calculation (400 doubled for 32 steps, if 16 steps then its 400 for me, meaure this with Extrusion test)
+//#define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 800 }  // default steps per unit
 
 /**
  * Default Max Feed Rate (mm/s)
@@ -771,9 +898,9 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-#define DEFAULT_ACCELERATION          3000    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
+#define DEFAULT_ACCELERATION           800   // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  2000   // E acceleration for retracts
+#define DEFAULT_TRAVEL_ACCELERATION   1000   // X, Y, Z acceleration for travel (non printing) moves
 
 /**
  * Default Jerk limits (mm/s)
@@ -836,7 +963,9 @@
  * The probe replaces the Z-MIN endstop and is used for Z homing.
  * (Automatically enables USE_PROBE_FOR_Z_HOMING.)
  */
-#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+#ifdef STOCK
+  #define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+#endif
 
 // Force the use of the probe for Z-axis homing
 //#define USE_PROBE_FOR_Z_HOMING
@@ -988,13 +1117,13 @@
 #define PROBING_MARGIN 10
 
 // X and Y axis travel speed (mm/min) between probes
-#define XY_PROBE_SPEED (133*60)
+#define XY_PROBE_SPEED  (70*60)
 
 // Feedrate (mm/min) for the first approach when double-probing (MULTIPLE_PROBING == 2)
 #define Z_PROBE_SPEED_FAST HOMING_FEEDRATE_Z
 
 // Feedrate (mm/min) for the "accurate" probe of each point
-#define Z_PROBE_SPEED_SLOW (Z_PROBE_SPEED_FAST / 2)
+#define Z_PROBE_SPEED_SLOW (Z_PROBE_SPEED_FAST / 6)
 
 /**
  * Multiple Probing
@@ -1081,10 +1210,26 @@
 // @section machine
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
-#define INVERT_X_DIR false
-#define INVERT_Y_DIR true
-#define INVERT_Z_DIR false
-
+#ifdef QQS
+  #define INVERT_X_DIR false
+  #define INVERT_Y_DIR false
+  #define INVERT_Z_DIR false
+  #ifdef INV_EXT
+    #define INVERT_E0_DIR false
+  #else
+    #define INVERT_E0_DIR true
+  #endif
+#endif
+#if EITHER(QQS_TMC, QQS_UART)
+  #define INVERT_X_DIR true
+  #define INVERT_Y_DIR true
+  #define INVERT_Z_DIR true
+  #ifdef INV_EXT
+    #define INVERT_E0_DIR true
+  #else
+    #define INVERT_E0_DIR false
+  #endif
+#endif 
 // @section extruder
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
@@ -1154,7 +1299,7 @@
 #endif
 
 #if EITHER(MIN_SOFTWARE_ENDSTOPS, MAX_SOFTWARE_ENDSTOPS)
-  //#define SOFT_ENDSTOPS_MENU_ITEM  // Enable/Disable software endstops from the LCD
+  //#define SOFT_ENDSTOPS_MENU_ITEM   // Enable/Disable software endstops from the LCD
 #endif
 
 /**
@@ -1351,8 +1496,9 @@
 
   //#define MESH_EDIT_GFX_OVERLAY   // Display a graphics overlay while editing the mesh
 
-  #define MESH_INSET 1              // Set Mesh bounds as an inset region of the bed
-  #define GRID_MAX_POINTS_X 10      // Don't use more than 15 points per axis, implementation limited.
+  #define MESH_INSET 10             // Set Mesh bounds as an inset region of the bed
+  #define GRID_MAX_POINTS_X 7       // Don't use more than 15 points per axis, implementation limited.
+  /// 10=53points, 13=90points, 15=110points
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
   #define UBL_MESH_EDIT_MOVES_Z     // Sophisticated users prefer no movement of nozzle
@@ -1515,7 +1661,7 @@
  *   M501 - Read settings from EEPROM. (i.e., Throw away unsaved changes)
  *   M502 - Revert settings to "factory" defaults. (Follow with M500 to init the EEPROM.)
  */
-//#define EEPROM_SETTINGS     // Persistent storage with M500 and M501
+#define EEPROM_SETTINGS       // Persistent storage with M500 and M501
 //#define DISABLE_M503        // Saves ~2700 bytes of PROGMEM. Disable for release!
 #define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save PROGMEM.
 #define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
@@ -1529,8 +1675,8 @@
 // When enabled Marlin will send a busy status message to the host
 // every couple of seconds when it can't accept commands.
 //
-#define HOST_KEEPALIVE_FEATURE        // Disable this if your host doesn't like keepalive messages
-#define DEFAULT_KEEPALIVE_INTERVAL 2  // Number of seconds between "busy" messages. Set with M113.
+//#define HOST_KEEPALIVE_FEATURE        // Disable this if your host doesn't like keepalive messages
+#define DEFAULT_KEEPALIVE_INTERVAL 3  // Number of seconds between "busy" messages. Set with M113.
 #define BUSY_WHILE_HEATING            // Some hosts require "busy" messages even during heating
 
 //
@@ -2369,13 +2515,17 @@
   #define BUTTON_DELAY_EDIT  50 // (ms) Button repeat delay for edit screens
   #define BUTTON_DELAY_MENU 250 // (ms) Button repeat delay for menus
 
-  #define TOUCH_SCREEN_CALIBRATION
+  #define TOUCH_SCREEN_CALIBRATION //or (M995) 
 
-  //#define TOUCH_CALIBRATION_X 12316
-  //#define TOUCH_CALIBRATION_Y -8981
-  //#define TOUCH_OFFSET_X        -43
-  //#define TOUCH_OFFSET_Y        257
-
+  // QQS-Pro use MKS Robin TFT v2.0
+  //#define TOUCH_CALIBRATION_X 12033
+  //#define TOUCH_CALIBRATION_Y -9047
+  //#define TOUCH_OFFSET_X        -30
+  //#define TOUCH_OFFSET_Y        254
+  //#define XPT2046_X_CALIBRATION   12033
+  //#define XPT2046_Y_CALIBRATION  -9047
+  //#define XPT2046_X_OFFSET       -301
+  //#define XPT2046_Y_OFFSET        254
   #if ENABLED(TFT_COLOR_UI)
     //#define SINGLE_TOUCH_NAVIGATION
   #endif
