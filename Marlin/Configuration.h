@@ -545,12 +545,6 @@
   //#define MIN_BED_POWER 0
   //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
-  // 120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
-  // from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
-  //#define DEFAULT_bedKp 10.00
-  //#define DEFAULT_bedKi .023
-  //#define DEFAULT_bedKd 305.4
-
   // FLSUN QQS-Pro 1.6mm aluminium heater with 4mm lattice glass
   #define DEFAULT_bedKp 82.98
   #define DEFAULT_bedKi 15.93
@@ -2608,10 +2602,11 @@
   #define TOUCH_CALIBRATION_Y -9047
   #define TOUCH_OFFSET_X        -30
   #define TOUCH_OFFSET_Y        254
-  //#define XPT2046_X_CALIBRATION   12033
-  //#define XPT2046_Y_CALIBRATION  -9047
-  //#define XPT2046_X_OFFSET       -301
-  //#define XPT2046_Y_OFFSET        254
+  //#define TOUCH_CALIBRATION_X 12316
+  //#define TOUCH_CALIBRATION_Y -8981
+  //#define TOUCH_OFFSET_X        -43
+  //#define TOUCH_OFFSET_Y        257
+  //#define TOUCH_ORIENTATION   TOUCH_LANDSCAPE
   #if ENABLED(TFT_COLOR_UI)
     //#define SINGLE_TOUCH_NAVIGATION
   #endif
