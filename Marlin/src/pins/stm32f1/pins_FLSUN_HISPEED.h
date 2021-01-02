@@ -121,15 +121,52 @@
  * to the most compatible.
  */
 #if HAS_TMC_UART
-  // SoftwareSerial with one pin per driver
-  // Compatible with TMC2208 and TMC2209 drivers
-  #define X_SERIAL_TX_PIN                   PA10  // RXD1
-  #define X_SERIAL_RX_PIN                   PA10  // RXD1
-  #define Y_SERIAL_TX_PIN                   PA9   // TXD1
-  #define Y_SERIAL_RX_PIN                   PA9   // TXD1
-  #define Z_SERIAL_TX_PIN                   PC7   // IO1
-  #define Z_SERIAL_RX_PIN                   PC7   // IO1
-  #define TMC_BAUD_RATE                    19200
+  #define TMC_BAUD_RATE                   19200
+  #ifdef HARDWARE_SERIAL /*  TMC2209 */
+    /**
+    * HardwareSerial with one pin for four drivers.
+    * Compatible with TMC2209. Provides best performance.
+    * Requires SLAVE_ADDRESS definitions in Configuration_adv.h and proper
+    * jumper configuration. Uses only one I/O pin like PA10/PA9/PC7/PA8.
+    * Install the jumpers in the following way, for example:
+    */
+    // The 4xTMC2209 module doesn't have a serial multiplexer and
+    // needs to set *_SLAVE_ADDRESS in Configuration_adv.h for X,Y,Z,E0
+    #define  X_SLAVE_ADDRESS 3    // |  |  :
+    #define  Y_SLAVE_ADDRESS 2    // :  |  :
+    #define  Z_SLAVE_ADDRESS 1    // |  :  :
+    //#define E0_SLAVE_ADDRESS 0    // :  :  :
+
+    #define X_SERIAL_TX_PIN                  PA8  // IO0
+    #define X_SERIAL_RX_PIN                  PA8  // IO0
+    #define Y_SERIAL_TX_PIN                  PA8  // IO0
+    #define Y_SERIAL_RX_PIN                  PA8  // IO0
+    #define Z_SERIAL_TX_PIN                  PA8  // IO0
+    #define Z_SERIAL_RX_PIN                  PA8  // IO0
+    #ifdef ESP_WIFI
+      //Module ESP-WIFI
+      #define ESP_WIFI_MODULE_COM               2
+      #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE
+      #define ESP_WIFI_MODULE_RESET_PIN         PA5
+      #define ESP_WIFI_MODULE_ENABLE_PIN        -1
+      #define ESP_WIFI_MODULE_TXD_PIN           PA9
+      #define ESP_WIFI_MODULE_RXD_PIN           PA10
+    #endif 
+  #else /*  TMC220x   */
+    // SoftwareSerial with one pin per driver
+    // Compatible with TMC2208 and TMC2209 drivers
+    #define  X_SLAVE_ADDRESS 0
+    #define  Y_SLAVE_ADDRESS 0
+    #define  Z_SLAVE_ADDRESS 0
+    
+    #define X_SERIAL_TX_PIN                   PA10  // RXD1
+    #define X_SERIAL_RX_PIN                   PA10  // RXD1
+    #define Y_SERIAL_TX_PIN                   PA9   // TXD1
+    #define Y_SERIAL_RX_PIN                   PA9   // TXD1
+    #define Z_SERIAL_TX_PIN                   PC7   // IO1
+    #define Z_SERIAL_RX_PIN                   PC7   // IO1
+  #endif
+
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_XY_PIN          PA6   // VREF2/3 CONTROL XY
